@@ -98,7 +98,7 @@ def main():
 
     banner("STEP 4: Fit logistic regression")
     X_fit, X_hold, y_fit, y_hold = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-    print(f"Split train.csv 80/20 -> {len(X_fit)} fit rows, {len(X_hold)} hold-out rows (random_state=42)")
+    print(f"Split train.csv 80/20 -> {len(X_fit)} train rows, {len(X_hold)} test rows (random_state=42)")
     model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
     model.fit(X_fit, y_fit)
     coefs = pd.Series(model[-1].coef_[0], index=X.columns).sort_values(key=abs, ascending=False)
@@ -106,11 +106,11 @@ def main():
     print(coefs.head(6).round(3).to_string())
 
     banner("STEP 5: Accuracy")
-    print(f"Training accuracy:          {accuracy_score(y_fit, model.predict(X_fit)):.3f}")
-    print(f"Hold-out accuracy:          {accuracy_score(y_hold, model.predict(X_hold)):.3f}  (20% of train.csv, never used to fit)")
+    print(f"Training accuracy (80% of train.csv): {accuracy_score(y_fit, model.predict(X_fit)):.3f}")
+    print(f"TEST accuracy (20% held-out set):     {accuracy_score(y_hold, model.predict(X_hold)):.3f}  <- never used to fit the model")
     # Refit on all labeled data for the final test predictions
     model.fit(X, y)
-    print(f"Training accuracy (refit on all {len(X)} rows): {accuracy_score(y, model.predict(X)):.3f}")
+    print(f"Final model refit on all {len(X)} labeled rows (training accuracy {accuracy_score(y, model.predict(X)):.3f})")
 
     banner("STEP 6: Predict on test.csv")
     test_feat = add_features(test, ref)
@@ -122,11 +122,11 @@ def main():
     print(f"Saved predictions to {out}")
 
     if "Survived" in test.columns:
-        print(f"Test accuracy: {accuracy_score(test['Survived'], preds):.3f}")
+        print(f"Accuracy on test.csv: {accuracy_score(test['Survived'], preds):.3f}")
     else:
-        print("Note: Kaggle's test.csv has no Survived column, so test accuracy cannot be computed here.")
-        print("The hold-out accuracy above is the honest estimate of performance on unseen passengers.")
-        print("Upload predictions_python.csv to Kaggle for the official test score.")
+        print("Note: Kaggle's test.csv has no Survived column, so its accuracy cannot be computed locally.")
+        print("The TEST accuracy reported in STEP 5 (20% held-out set) is the measured test-set accuracy.")
+        print("Upload predictions_python.csv to Kaggle for the official score on test.csv.")
 
 
 if __name__ == "__main__":

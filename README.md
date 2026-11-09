@@ -81,16 +81,21 @@ Both scripts print the same six sections:
 1. **Load data** – file locations, shapes, first rows
 2. **Explore** – survival rate overall, by sex and by class; missing values
 3. **Clean and engineer features** – `Title` extracted from `Name`, `FamilySize`, `IsAlone`; missing `Age` filled by title median, `Fare`/`Embarked` filled with median/mode; unused columns dropped
-4. **Fit logistic regression** – 80/20 split of `train.csv`, largest coefficients
-5. **Accuracy** – training accuracy and hold-out accuracy
+4. **Fit logistic regression** – 80/20 train/test split of `train.csv`, largest coefficients
+5. **Accuracy** – training accuracy and test accuracy
 6. **Predict on `test.csv`** – prediction counts, and a predictions file saved to `src/data/predictions_python.csv` / `predictions_r.csv`
 
-## A note on test accuracy
+## How test accuracy is measured
 
-Kaggle's `test.csv` **does not include the `Survived` column**, so accuracy on it cannot be computed locally.
-To still report an honest out-of-sample number, each script holds out 20% of `train.csv` (never used for fitting) and reports **hold-out accuracy**.
-The final model is then refit on all of `train.csv` and used to predict `test.csv`; you can upload the saved predictions CSV to Kaggle
-(**Submit Predictions**) for the official test score. If you supply a `test.csv` that does contain `Survived`, the scripts will also print test accuracy automatically.
+Kaggle's `test.csv` **does not include the `Survived` column**, so its accuracy cannot be computed locally.
+To still measure accuracy on unseen data, each script splits `train.csv` 80/20 (fixed random seed):
+
+- **Training set (80%)** – used to fit the model; the script prints **training accuracy**.
+- **Test set (20%)** – never used for fitting; the script prints **TEST accuracy**.
+
+The final model is then refit on all of `train.csv` and used to predict Kaggle's `test.csv`; the predictions are saved
+to `src/data/predictions_*.csv` and can be uploaded to Kaggle (**Submit Predictions**) for the official score.
+If you supply a `test.csv` that does contain `Survived`, the scripts also print accuracy on it automatically.
 
 ## Model details
 

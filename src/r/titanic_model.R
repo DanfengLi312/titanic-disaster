@@ -92,7 +92,7 @@ set.seed(42)
 hold_idx <- sample(nrow(train), size = round(0.2 * nrow(train)))
 fit_df <- train[-hold_idx, ]
 hold_df <- train[hold_idx, ]
-cat(sprintf("Split train.csv 80/20 -> %d fit rows, %d hold-out rows (seed 42)\n", nrow(fit_df), nrow(hold_df)))
+cat(sprintf("Split train.csv 80/20 -> %d train rows, %d test rows (seed 42)\n", nrow(fit_df), nrow(hold_df)))
 model <- glm(model_formula, data = fit_df, family = binomial)
 cat("\nLargest coefficients:\n")
 coefs <- coef(model)
@@ -101,12 +101,12 @@ print(round(head(coefs[order(-abs(coefs))], 6), 3))
 
 banner("STEP 5: Accuracy")
 predict_class <- function(m, df) as.integer(predict(m, newdata = df, type = "response") > 0.5)
-cat(sprintf("Training accuracy:          %.3f\n", accuracy(fit_df$Survived, predict_class(model, fit_df))))
-cat(sprintf("Hold-out accuracy:          %.3f  (20%% of train.csv, never used to fit)\n",
+cat(sprintf("Training accuracy (80%% of train.csv): %.3f\n", accuracy(fit_df$Survived, predict_class(model, fit_df))))
+cat(sprintf("TEST accuracy (20%% held-out set):     %.3f  <- never used to fit the model\n",
             accuracy(hold_df$Survived, predict_class(model, hold_df))))
 # Refit on all labeled data for the final test predictions
 model <- glm(model_formula, data = train, family = binomial)
-cat(sprintf("Training accuracy (refit on all %d rows): %.3f\n", nrow(train),
+cat(sprintf("Final model refit on all %d labeled rows (training accuracy %.3f)\n", nrow(train),
             accuracy(train$Survived, predict_class(model, train))))
 
 banner("STEP 6: Predict on test.csv")
@@ -118,9 +118,9 @@ write.csv(data.frame(PassengerId = test$PassengerId, Survived = preds), out_path
 cat("Saved predictions to", out_path, "\n")
 
 if ("Survived" %in% names(test)) {
-  cat(sprintf("Test accuracy: %.3f\n", accuracy(test$Survived, preds)))
+  cat(sprintf("Accuracy on test.csv: %.3f\n", accuracy(test$Survived, preds)))
 } else {
-  cat("Note: Kaggle's test.csv has no Survived column, so test accuracy cannot be computed here.\n")
-  cat("The hold-out accuracy above is the honest estimate of performance on unseen passengers.\n")
-  cat("Upload predictions_r.csv to Kaggle for the official test score.\n")
+  cat("Note: Kaggle's test.csv has no Survived column, so its accuracy cannot be computed locally.\n")
+  cat("The TEST accuracy reported in STEP 5 (20% held-out set) is the measured test-set accuracy.\n")
+  cat("Upload predictions_r.csv to Kaggle for the official score on test.csv.\n")
 }
